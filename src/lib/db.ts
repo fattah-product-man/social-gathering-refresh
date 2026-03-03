@@ -1,10 +1,12 @@
+import { supabase } from '@/integrations/supabase/client';
+
 // Types
 export interface Event {
   id: string;
   name: string;
   host_name: string;
   reveal_matches: boolean;
-  admin_passcode: string;
+  admin_passcode?: string; // never returned from events_public view
   created_at: string;
   start_time?: string;
 }
@@ -53,143 +55,166 @@ export interface WallPost {
   created_at: string;
 }
 
-// Mock Data Store (LocalStorage) - Demo Mode
-const MOCK_DELAY = 300;
-
-const getMockData = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
-};
-
-const setMockData = <T>(key: string, data: T[]) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
-
-// DB Abstraction (Demo mode only - localStorage)
+// DB Abstraction — Supabase
 export const db = {
   async getEvent(id: string): Promise<Event | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const events = getMockData<Event>('mock_events');
-    let event = events.find(e => e.id === id);
-    
-    if (!event && id === 'demo') {
-      event = {
-        id: 'demo',
-        name: 'Ramadan Iftar 2026',
-        host_name: 'Hashem',
-        reveal_matches: false,
-        admin_passcode: '1234',
-        created_at: new Date().toISOString(),
-        start_time: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString()
-      };
-      setMockData('mock_events', [...events, event]);
-    }
-    return event || null;
+    const { data, error } = await supabase
+      .from('events_public')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error || !data) return null;
+    return data as unknown as Event;
   },
 
   async createGuest(guest: Omit<Guest, 'id' | 'created_at'>): Promise<Guest | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const guests = getMockData<Guest>('mock_guests');
-    const newGuest: Guest = {
-      ...guest,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
-    };
-    setMockData('mock_guests', [...guests, newGuest]);
-    return newGuest;
+    const { data, error } = await supabase
+      .from('guests')
+      .insert({
+        event_id: guest.event_id,
+        guest_token: guest.guest_token,
+        name: guest.name,
+        avatar_url: guest.avatar_url || null,
+        instagram: guest.instagram || null,
+        energy_level: guest.energy_level || 'Balanced',
+        goals: guest.goals || [],
+        interests: guest.interests || [],
+        answers: guest.answers || {},
+        color: guest.color || null,
+      })
+      .select()
+      .single();
+    if (error) { console.error('createGuest error:', error); return null; }
+    return data as unknown as Guest;
   },
 
   async findGuestByName(eventId: string, name: string): Promise<Guest | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const guests = getMockData<Guest>('mock_guests');
-    return guests.find(g => g.event_id === eventId && g.name.toLowerCase() === name.toLowerCase()) || null;
+    const { data, error } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('event_id', eventId)
+      .ilike('name', name)
+      .single();
+    if (error || !data) return null;
+    return data as unknown as Guest;
   },
 
   async getGuest(eventId: string, token: string): Promise<Guest | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const guests = getMockData<Guest>('mock_guests');
-    return guests.find(g => g.event_id === eventId && g.guest_token === token) || null;
+    const { data, error } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('guest_token', token)
+      .single();
+    if (error || !data) return null;
+    return data as unknown as Guest;
   },
 
   async getGuests(eventId: string): Promise<Guest[]> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const guests = getMockData<Guest>('mock_guests');
-    return guests.filter(g => g.event_id === eventId);
+    const { data, error } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('event_id', eventId);
+    if (error) { console.error('getGuests error:', error); return []; }
+    return (data || []) as unknown as Guest[];
   },
 
   async updateGuest(eventId: string, token: string, updates: Partial<Guest>): Promise<Guest | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const guests = getMockData<Guest>('mock_guests');
-    const index = guests.findIndex(g => g.event_id === eventId && g.guest_token === token);
-    if (index === -1) return null;
-    
-    const updatedGuest = { ...guests[index], ...updates };
-    guests[index] = updatedGuest;
-    setMockData('mock_guests', guests);
-    return updatedGuest;
+    const { data, error } = await supabase
+      .from('guests')
+      .update(updates)
+      .eq('event_id', eventId)
+      .eq('guest_token', token)
+      .select()
+      .single();
+    if (error) { console.error('updateGuest error:', error); return null; }
+    return data as unknown as Guest;
   },
 
   async createFeedback(feedback: Omit<Feedback, 'id' | 'created_at'>): Promise<Feedback | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const feedbacks = getMockData<Feedback>('mock_feedback');
-    const newFeedback: Feedback = {
-      ...feedback,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
-    };
-    setMockData('mock_feedback', [...feedbacks, newFeedback]);
-    return newFeedback;
+    const { data, error } = await supabase
+      .from('feedback')
+      .insert(feedback)
+      .select()
+      .single();
+    if (error) { console.error('createFeedback error:', error); return null; }
+    return data as unknown as Feedback;
   },
 
   async getWallPosts(eventId: string): Promise<WallPost[]> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const posts = getMockData<WallPost>('mock_wall_posts');
-    return posts.filter(p => p.event_id === eventId).sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    const { data, error } = await supabase
+      .from('wall_posts')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('getWallPosts error:', error); return []; }
+    return (data || []) as unknown as WallPost[];
   },
 
   async createWallPost(post: Omit<WallPost, 'id' | 'created_at'>): Promise<WallPost | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const posts = getMockData<WallPost>('mock_wall_posts');
-    const newPost: WallPost = {
-      ...post,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
-    };
-    setMockData('mock_wall_posts', [newPost, ...posts]);
-    return newPost;
+    const { data, error } = await supabase
+      .from('wall_posts')
+      .insert(post)
+      .select()
+      .single();
+    if (error) { console.error('createWallPost error:', error); return null; }
+    return data as unknown as WallPost;
   },
 
   async saveScore(score: Omit<Score, 'id' | 'created_at'>): Promise<Score | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const scores = getMockData<Score>('mock_scores');
-    const newScore: Score = {
-      ...score,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString()
-    };
-    setMockData('mock_scores', [...scores, newScore]);
-    return newScore;
+    const { data, error } = await supabase
+      .from('scores')
+      .insert(score)
+      .select()
+      .single();
+    if (error) { console.error('saveScore error:', error); return null; }
+    return data as unknown as Score;
   },
 
   async getLeaderboard(eventId: string, gameId: string): Promise<Score[]> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const scores = getMockData<Score>('mock_scores');
-    return scores
-      .filter(s => s.event_id === eventId && s.game_id === gameId)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+    const { data, error } = await supabase
+      .from('scores')
+      .select('*')
+      .eq('event_id', eventId)
+      .eq('game_id', gameId)
+      .order('score', { ascending: false })
+      .limit(10);
+    if (error) { console.error('getLeaderboard error:', error); return []; }
+    return (data || []) as unknown as Score[];
   },
 
-  async toggleRevealMatches(eventId: string, reveal: boolean): Promise<Event | null> {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
-    const events = getMockData<Event>('mock_events');
-    const index = events.findIndex(e => e.id === eventId);
-    if (index === -1) return null;
-    
-    events[index].reveal_matches = reveal;
-    setMockData('mock_events', events);
-    return events[index];
-  }
+  async toggleRevealMatches(eventId: string, reveal: boolean, passcode: string): Promise<Event | null> {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { event_id: eventId, passcode, action: 'toggle_reveal', payload: { reveal } },
+    });
+    if (error) { console.error('toggleRevealMatches error:', error); return null; }
+    return data as Event;
+  },
+
+  async adminVerify(eventId: string, passcode: string): Promise<{ verified: boolean; event?: Event } | null> {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { event_id: eventId, passcode, action: 'verify' },
+    });
+    if (error) { console.error('adminVerify error:', error); return null; }
+    return data;
+  },
+
+  async adminGetGuests(eventId: string, passcode: string): Promise<Guest[]> {
+    const { data, error } = await supabase.functions.invoke('admin-action', {
+      body: { event_id: eventId, passcode, action: 'get_guests' },
+    });
+    if (error) { console.error('adminGetGuests error:', error); return []; }
+    return data as Guest[];
+  },
+
+  async uploadAvatar(file: File): Promise<string | null> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+    if (error) { console.error('uploadAvatar error:', error); return null; }
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    return urlData.publicUrl;
+  },
 };
