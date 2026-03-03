@@ -1,99 +1,69 @@
 
 
-# Backend Integration Plan: Lovable Cloud (Supabase)
+# Fix Plan: Make the App Fully Functional
 
-This plan migrates the app from localStorage to a real Supabase backend so data persists across devices and users can interact in real-time.
+## Root Causes Identified
 
----
+### 1. Events data inaccessible (Critical)
+The `events` table has RLS enabled but **zero SELECT policies**. The `events_public` view uses `security_invoker=on`, which means it checks RLS on the base table. Since there's no SELECT policy, the view returns nothing. Additionally, the `events_public` view has **no GRANT** for `anon` or `authenticated` roles. Result: `getEvent()` always returns `null` → Landing page shows "Event not found".
 
-## Architecture Decision
+### 2. BottomNav invisible on light pages
+The navigation bar uses dark-theme styling (`bg-white/10`, white text) designed for dark backgrounds. But pages like People, Groups, Profile use a light `bg-[#F5F5F7]` background, making the nav nearly invisible.
 
-Since the app uses **guest tokens** (not Supabase Auth), we'll use a practical approach:
-- Tables with **permissive RLS for anonymous access** scoped by event_id
-- Guests identify themselves via `guest_token` stored in localStorage
-- Admin operations (toggle reveal) validated server-side via an **edge function**
-- Avatar images uploaded to **Supabase Storage** instead of base64 strings
-
----
-
-## Step 1: Enable Lovable Cloud
-
-Connect Supabase to the project so we get a database, storage, and edge functions.
-
-## Step 2: Database Schema (Migrations)
-
-**Migration 1 — Create tables:**
-
-- `events` (id uuid PK, name text, host_name text, reveal_matches bool default false, admin_passcode text, start_time timestamptz, created_at timestamptz default now())
-- `guests` (id uuid PK, event_id uuid FK→events, guest_token text not null, name text, avatar_url text, instagram text, energy_level text, goals text[], interests text[], answers jsonb default '{}', color text, created_at timestamptz default now(); unique(event_id, guest_token))
-- `wall_posts` (id uuid PK, event_id uuid FK→events, guest_token text, guest_name text, message text, gif_url text, created_at timestamptz default now())
-- `scores` (id uuid PK, event_id uuid FK→events, guest_token text, guest_name text, game_id text, score int, metadata jsonb, created_at timestamptz default now())
-- `feedback` (id uuid PK, event_id uuid FK→events, guest_token text, responses jsonb, created_at timestamptz default now())
-
-**Migration 2 — RLS policies:**
-
-Since no Supabase Auth is used, all access is via the `anon` key. Policies allow:
-- SELECT on all tables (public within event)
-- INSERT on guests, wall_posts, scores, feedback
-- UPDATE on guests (where guest_token matches)
-- SELECT on events hides `admin_passcode` via a **view** (`events_public`)
-
-**Migration 3 — Seed demo event:**
-
-Insert the "Ramadan Iftar 2026" demo event with id = a fixed UUID.
-
-## Step 3: Supabase Storage Bucket
-
-Create an `avatars` bucket (public) for profile pictures. Update the onboarding and profile flows to upload images to storage instead of storing base64.
-
-## Step 4: Admin Edge Function
-
-Create `supabase/functions/admin-action/index.ts`:
-- POST with `{ event_id, passcode, action, payload }`
-- Validates passcode against event's `admin_passcode`
-- Supports actions: `toggle_reveal`, `get_guests`, `get_stats`
-- Returns results or 403
-
-## Step 5: Rewrite `src/lib/db.ts`
-
-Replace all localStorage operations with Supabase client calls:
-- `getEvent` → `supabase.from('events_public').select().eq('id', id).single()`
-- `createGuest` → `supabase.from('guests').insert(...)`
-- `getGuests` → `supabase.from('guests').select().eq('event_id', id)`
-- `updateGuest` → `supabase.from('guests').update(...).eq('event_id', id).eq('guest_token', token)`
-- `createWallPost` → `supabase.from('wall_posts').insert(...)`
-- `getWallPosts` → `supabase.from('wall_posts').select().eq('event_id', id).order('created_at', { ascending: false })`
-- `saveScore` / `getLeaderboard` → same pattern
-- `toggleRevealMatches` → calls the admin edge function
-- New: `uploadAvatar(file)` → uploads to storage bucket, returns public URL
-
-## Step 6: Update UI Components
-
-- **Onboarding.tsx**: Upload avatar file to Supabase Storage, store returned URL
-- **Profile.tsx**: Same storage upload for avatar changes
-- **Admin.tsx**: Call edge function instead of direct DB for admin actions
-- **Landing.tsx**: Use fixed demo event UUID instead of localStorage auto-creation
+### 3. No sample/seed data for demo feel
+The database has only 1 test user. The old demo had 12 sample guests with interests across all categories, which made Groups, People, and Common Interests pages feel alive. We should seed these into the database so the app feels populated.
 
 ---
 
-## Files to Create/Modify
+## Technical Changes
 
-| File | Action |
+### Migration: Fix events access + seed sample guests
+
+```sql
+-- 1. Add SELECT policy on events table for the view to work
+CREATE POLICY "Anyone can read events"
+  ON public.events FOR SELECT
+  USING (true);
+
+-- 2. Grant SELECT on the view to anon and authenticated
+GRANT SELECT ON public.events_public TO anon, authenticated;
+
+-- 3. Seed the 12 sample guests into the real event
+INSERT INTO public.guests (event_id, guest_token, name, avatar_url, energy_level, goals, interests, answers, color)
+VALUES
+  ('8f42b1c3-...', 'token_1', 'Sarah Chen', '...', 'Social butterfly', ...),
+  -- ... all 12 sample guests from sampleData.ts
+```
+
+This seeds the demo event with real data so People, Groups, Common Interests, and the Wall all show content.
+
+### Fix BottomNav styling (`src/components/BottomNav.tsx`)
+Change the nav to use a light/solid background that works on the light `bg-[#F5F5F7]` pages:
+- `bg-white/90 backdrop-blur-xl shadow-lg border border-stone-200`
+- Active tab: solid indigo gradient (already works)
+- Inactive: `text-stone-500` instead of white-based opacity
+
+### Fix Wall page background conflict (`src/pages/Wall.tsx`)
+The Wall page has `fixed inset-0` which creates a full-screen overlay. Ensure it works within the Layout properly since Layout already handles backgrounds.
+
+### Seed sample wall posts
+Insert the 5 sample wall posts from `sampleData.ts` into the `wall_posts` table so the Hype Wall has content.
+
+---
+
+## Files to Change
+| File | Change |
 |------|--------|
-| `src/integrations/supabase/client.ts` | Created by Lovable Cloud |
-| `src/lib/db.ts` | Rewrite: Supabase client calls |
-| `src/pages/Onboarding.tsx` | Update avatar upload to use Storage |
-| `src/pages/Profile.tsx` | Update avatar upload to use Storage |
-| `src/pages/Admin.tsx` | Use edge function for admin ops |
-| `supabase/functions/admin-action/index.ts` | New edge function |
-| Database migrations (3) | Schema, RLS, seed data |
+| Database migration | Add events SELECT policy, GRANT on view, seed 12 guests + 5 wall posts |
+| `src/components/BottomNav.tsx` | Fix styling for light backgrounds |
+| `src/pages/Wall.tsx` | Minor background fix for Layout compatibility |
 
----
-
-## Security Considerations
-
-- `admin_passcode` is never exposed to clients (hidden via view)
-- Admin operations go through edge function with passcode validation
-- Guest updates require matching `guest_token`
-- All data within an event is visible to any guest of that event (by design for a social gathering app)
+## Expected Outcome
+- Landing page loads the event correctly
+- People directory shows all 12+ guests
+- Groups page shows interest-based groups with members
+- Common Interests shows matches
+- Wall shows posts
+- Profile loads the current user's data
+- Bottom navigation is visible and functional on all pages
 
