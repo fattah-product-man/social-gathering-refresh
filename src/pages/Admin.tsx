@@ -8,24 +8,34 @@ import { Lock, Unlock, Users, CheckCircle } from 'lucide-react';
 export function Admin() {
   const { eventId } = useParams<{ eventId: string }>();
   const [passcode, setPasscode] = useState('');
+  const [storedPasscode, setStoredPasscode] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (eventId && isAuthenticated) { db.getEvent(eventId).then(setEvent); db.getGuests(eventId).then(setGuests); }
-  }, [eventId, isAuthenticated]);
+    if (eventId && isAuthenticated && storedPasscode) {
+      db.adminGetGuests(eventId, storedPasscode).then(setGuests);
+    }
+  }, [eventId, isAuthenticated, storedPasscode]);
 
   const handleLogin = async () => {
-    const e = await db.getEvent(eventId!);
-    if (e && e.admin_passcode === passcode) { setEvent(e); setIsAuthenticated(true); setError(''); }
-    else { setError('Invalid passcode'); }
+    if (!eventId) return;
+    const result = await db.adminVerify(eventId, passcode);
+    if (result?.verified && result.event) {
+      setEvent(result.event);
+      setStoredPasscode(passcode);
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Invalid passcode');
+    }
   };
 
   const toggleReveal = async () => {
     if (!event) return;
-    const updated = await db.toggleRevealMatches(event.id, !event.reveal_matches);
+    const updated = await db.toggleRevealMatches(event.id, !event.reveal_matches, storedPasscode);
     if (updated) setEvent(updated);
   };
 
@@ -54,7 +64,7 @@ export function Admin() {
       </GatherCard>
       <div className="grid grid-cols-2 gap-4">
         <GatherCard className="p-4 space-y-2"><div className="flex items-center gap-2 text-stone-500"><Users className="w-4 h-4" /> Total Guests</div><div className="text-3xl font-bold">{guests.length}</div></GatherCard>
-        <GatherCard className="p-4 space-y-2"><div className="flex items-center gap-2 text-stone-500"><CheckCircle className="w-4 h-4" /> Completed</div><div className="text-3xl font-bold">{guests.filter(g => Object.keys(g.answers).length === 3).length}</div></GatherCard>
+        <GatherCard className="p-4 space-y-2"><div className="flex items-center gap-2 text-stone-500"><CheckCircle className="w-4 h-4" /> Completed</div><div className="text-3xl font-bold">{guests.filter(g => Object.keys(g.answers).length > 0).length}</div></GatherCard>
       </div>
       <div className="space-y-4">
         <h3 className="font-bold text-stone-800">Guest List</h3>

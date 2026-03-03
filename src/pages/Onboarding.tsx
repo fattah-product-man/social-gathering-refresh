@@ -22,12 +22,11 @@ export function Onboarding() {
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => updateData('avatar_url', reader.result as string);
-      reader.readAsDataURL(file);
+      const url = await db.uploadAvatar(file);
+      if (url) updateData('avatar_url', url);
     }
   };
 
