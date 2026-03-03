@@ -1,101 +1,99 @@
 
 
-# Comprehensive Improvements Plan
+# Backend Integration Plan: Lovable Cloud (Supabase)
 
-This is a large set of changes touching the onboarding flow, navigation, matches removal, profile page, and sample data cleanup. Here's the organized plan:
-
----
-
-## 1. Onboarding Flow Fixes (Onboarding.tsx)
-
-**Step 1 - Name Entry:**
-- Remove the "Ahlannn, Hashem..." welcome card (lines 57-64)
-- Reduce whitespace: remove `flex-1 flex flex-col justify-center` centering, compact the layout
-- Ensure Continue button is above the fold on mobile
-
-**Step 2 - Avatar Upload:**
-- Remove the 500KB file size limit (line 28) — allow any size image
-- Reduce whitespace for mobile
-
-**Step 3 - Instagram:**
-- Same whitespace reduction, button above fold
-- Remove glow/pulsating background effects
-
-**Step 4 - Questions ("Where do we know each other from?"):**
-- Replace choices in `QUESTIONS` constant (constants.ts lines 67-72) with:
-  1. Friend from way back
-  2. School Days
-  3. Sahel Summers
-  4. Sokhna Vibes
-  5. Met recently
-  6. First time meeting
-- Fix transition stutter after pressing Finish — use smoother `AnimatePresence` transition
-
-**Step 5 - Celebration ("You're in!"):**
-- Add the user's name: "USERNAME, You're in!"
-
-**Step 6 - Wall Post Entry (Step 7 in code):**
-- Change background to white-to-purple subtle gradient, full screen, no containers
-- Replace GIF URLs with reliable, working Giphy GIFs (use stable Giphy URLs)
-
-## 2. Remove Global Pulsating/Glow Effects (Layout.tsx)
-
-- Remove the animated blob divs from Layout.tsx (the `animate-blob` background circles)
-- Keep a clean, static background instead
-
-## 3. Welcome Modal Improvements (Wall.tsx, lines 100-127)
-
-- Replace "Reveal My Matches" → "See people with common interests"
-- Replace "You're in!" → "USERNAME, Welcome to the Community!"
-- Make confetti emoji 4x bigger, static (no `animate-bounce`), positioned to pop out of card
-- Update navigation links to point to real pages (they already do, but ensure no sample data fallback)
-
-## 4. Remove Matches Feature Entirely
-
-- Delete `src/pages/Matches.tsx`
-- Remove Matches route from `App.tsx`
-- Update `BottomNav.tsx`: replace Matches tab with a different tab or remove it
-- Create a **"Common Interests" card** pinned at top of People page → links to new sub-page
-- Create new page `src/pages/CommonInterests.tsx`: shows users sharing interests with current user, gradient glow cards, highlighted common interests
-- Add route for `/e/:eventId/common-interests`
-
-## 5. Profile Page (Profile.tsx) — Make Fully Functional
-
-- Ensure editing name, image, instagram, interests all work with `db.updateGuest`
-- Add bottom section: "Want a Social App for Your Gathering?" promo card + "Created by Mo Fattah, CEO of Bub AI"
-
-## 6. Remove All Sample Data Fallbacks
-
-- In `People.tsx` line 25: remove `getSampleGuests` fallback
-- In `Groups.tsx` line 31: remove `getSampleGuests` fallback
-- In `Wall.tsx` line 61: remove `getSampleWallPosts` fallback
-- In `Matches.tsx` line 32: file will be deleted
-- In `db.ts` lines 117-134: remove the fake guest seeding in `getGuests`
-- Show empty states instead of sample data
-
-## 7. Update BottomNav
-
-- Remove Matches tab, replace with "Common Interests" or keep 4 tabs: People, Groups, Wall, Me
+This plan migrates the app from localStorage to a real Supabase backend so data persists across devices and users can interact in real-time.
 
 ---
 
-## Technical Details
+## Architecture Decision
 
-**Files to modify:**
-- `src/pages/Onboarding.tsx` — onboarding steps, file size limit, whitespace, questions transition
-- `src/lib/constants.ts` — update QUESTIONS choices
-- `src/components/Layout.tsx` — remove blob animations
-- `src/pages/Wall.tsx` — welcome modal updates
-- `src/pages/People.tsx` — add common interests card, remove sample data
-- `src/pages/Groups.tsx` — remove sample data
-- `src/pages/Profile.tsx` — make functional, add promo footer
-- `src/components/BottomNav.tsx` — remove matches, update nav
-- `src/App.tsx` — remove matches route, add common interests route
-- `src/lib/db.ts` — remove fake guest seeding
+Since the app uses **guest tokens** (not Supabase Auth), we'll use a practical approach:
+- Tables with **permissive RLS for anonymous access** scoped by event_id
+- Guests identify themselves via `guest_token` stored in localStorage
+- Admin operations (toggle reveal) validated server-side via an **edge function**
+- Avatar images uploaded to **Supabase Storage** instead of base64 strings
 
-**Files to create:**
-- `src/pages/CommonInterests.tsx` — new page showing users with shared interests
+---
 
-**Files to delete:**
-- `src/pages/Matches.tsx`
+## Step 1: Enable Lovable Cloud
+
+Connect Supabase to the project so we get a database, storage, and edge functions.
+
+## Step 2: Database Schema (Migrations)
+
+**Migration 1 — Create tables:**
+
+- `events` (id uuid PK, name text, host_name text, reveal_matches bool default false, admin_passcode text, start_time timestamptz, created_at timestamptz default now())
+- `guests` (id uuid PK, event_id uuid FK→events, guest_token text not null, name text, avatar_url text, instagram text, energy_level text, goals text[], interests text[], answers jsonb default '{}', color text, created_at timestamptz default now(); unique(event_id, guest_token))
+- `wall_posts` (id uuid PK, event_id uuid FK→events, guest_token text, guest_name text, message text, gif_url text, created_at timestamptz default now())
+- `scores` (id uuid PK, event_id uuid FK→events, guest_token text, guest_name text, game_id text, score int, metadata jsonb, created_at timestamptz default now())
+- `feedback` (id uuid PK, event_id uuid FK→events, guest_token text, responses jsonb, created_at timestamptz default now())
+
+**Migration 2 — RLS policies:**
+
+Since no Supabase Auth is used, all access is via the `anon` key. Policies allow:
+- SELECT on all tables (public within event)
+- INSERT on guests, wall_posts, scores, feedback
+- UPDATE on guests (where guest_token matches)
+- SELECT on events hides `admin_passcode` via a **view** (`events_public`)
+
+**Migration 3 — Seed demo event:**
+
+Insert the "Ramadan Iftar 2026" demo event with id = a fixed UUID.
+
+## Step 3: Supabase Storage Bucket
+
+Create an `avatars` bucket (public) for profile pictures. Update the onboarding and profile flows to upload images to storage instead of storing base64.
+
+## Step 4: Admin Edge Function
+
+Create `supabase/functions/admin-action/index.ts`:
+- POST with `{ event_id, passcode, action, payload }`
+- Validates passcode against event's `admin_passcode`
+- Supports actions: `toggle_reveal`, `get_guests`, `get_stats`
+- Returns results or 403
+
+## Step 5: Rewrite `src/lib/db.ts`
+
+Replace all localStorage operations with Supabase client calls:
+- `getEvent` → `supabase.from('events_public').select().eq('id', id).single()`
+- `createGuest` → `supabase.from('guests').insert(...)`
+- `getGuests` → `supabase.from('guests').select().eq('event_id', id)`
+- `updateGuest` → `supabase.from('guests').update(...).eq('event_id', id).eq('guest_token', token)`
+- `createWallPost` → `supabase.from('wall_posts').insert(...)`
+- `getWallPosts` → `supabase.from('wall_posts').select().eq('event_id', id).order('created_at', { ascending: false })`
+- `saveScore` / `getLeaderboard` → same pattern
+- `toggleRevealMatches` → calls the admin edge function
+- New: `uploadAvatar(file)` → uploads to storage bucket, returns public URL
+
+## Step 6: Update UI Components
+
+- **Onboarding.tsx**: Upload avatar file to Supabase Storage, store returned URL
+- **Profile.tsx**: Same storage upload for avatar changes
+- **Admin.tsx**: Call edge function instead of direct DB for admin actions
+- **Landing.tsx**: Use fixed demo event UUID instead of localStorage auto-creation
+
+---
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/integrations/supabase/client.ts` | Created by Lovable Cloud |
+| `src/lib/db.ts` | Rewrite: Supabase client calls |
+| `src/pages/Onboarding.tsx` | Update avatar upload to use Storage |
+| `src/pages/Profile.tsx` | Update avatar upload to use Storage |
+| `src/pages/Admin.tsx` | Use edge function for admin ops |
+| `supabase/functions/admin-action/index.ts` | New edge function |
+| Database migrations (3) | Schema, RLS, seed data |
+
+---
+
+## Security Considerations
+
+- `admin_passcode` is never exposed to clients (hidden via view)
+- Admin operations go through edge function with passcode validation
+- Guest updates require matching `guest_token`
+- All data within an event is visible to any guest of that event (by design for a social gathering app)
 
