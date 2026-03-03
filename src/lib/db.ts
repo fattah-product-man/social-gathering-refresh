@@ -62,7 +62,7 @@ export const db = {
       .from('events_public')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     if (error || !data) return null;
     return data as unknown as Event;
   },
@@ -79,6 +79,7 @@ export const db = {
         energy_level: guest.energy_level || 'Balanced',
         goals: guest.goals || [],
         interests: guest.interests || [],
+
         answers: guest.answers || {},
         color: guest.color || null,
       })
@@ -94,7 +95,7 @@ export const db = {
       .select('*')
       .eq('event_id', eventId)
       .ilike('name', name)
-      .single();
+      .maybeSingle();
     if (error || !data) return null;
     return data as unknown as Guest;
   },
@@ -105,7 +106,7 @@ export const db = {
       .select('*')
       .eq('event_id', eventId)
       .eq('guest_token', token)
-      .single();
+      .maybeSingle();
     if (error || !data) return null;
     return data as unknown as Guest;
   },
