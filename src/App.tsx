@@ -27,7 +27,7 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<Navigate to="/e/demo" replace />} />
+            <Route path="/" element={<Navigate to="/e/8f42b1c3-5d9e-4a7b-b2e1-9c3f4d5a6e7b" replace />} />
             <Route path="/e/:eventId" element={<Landing />} />
             <Route path="/e/:eventId/join" element={<Onboarding />} />
             <Route path="/e/:eventId/people" element={<People />} />

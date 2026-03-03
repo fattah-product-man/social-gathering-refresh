@@ -10,7 +10,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={`min-h-screen font-sans relative overflow-hidden transition-colors duration-500 ${
-      isAuthPage ? 'text-white' : 'bg-[#F5F5F7] text-[#1D1D1F] pb-24'
+      isAuthPage ? 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white' : 'bg-[#F5F5F7] text-[#1D1D1F] pb-24'
     }`}>
       <main className={isAuthPage ? 'min-h-screen relative z-10' : 'max-w-md mx-auto p-4 min-h-screen relative z-10'}>
         {children}
