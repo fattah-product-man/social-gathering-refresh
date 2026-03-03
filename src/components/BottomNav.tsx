@@ -13,7 +13,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-6 left-4 right-4 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[32px] p-2 shadow-2xl z-50 max-w-md mx-auto ring-1 ring-white/10">
+    <nav className="fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-xl border border-stone-200 rounded-[32px] p-2 shadow-lg z-50 max-w-md mx-auto">
       <div className="flex justify-around items-center">
         {navItems.map(({ to, emoji, label }) => (
           <NavLink
@@ -24,18 +24,17 @@ export function BottomNav() {
                 'flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 relative group',
                 isActive 
                   ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/40 scale-110 -translate-y-2' 
-                  : 'hover:bg-white/10'
+                  : 'hover:bg-stone-100'
               )
             }
           >
             {({ isActive }) => (
               <>
-                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 transition-opacity ${isActive ? 'opacity-100' : ''}`} />
-                <span className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'opacity-80 grayscale-[0.5]'}`}>
+                <span className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'opacity-70 grayscale-[0.3]'}`}>
                   {emoji}
                 </span>
                 {isActive && (
-                  <span className="absolute -bottom-6 text-[10px] font-bold text-white/90 tracking-wide">
+                  <span className="absolute -bottom-6 text-[10px] font-bold text-stone-600 tracking-wide">
                     {label}
                   </span>
                 )}
