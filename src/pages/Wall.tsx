@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { db, WallPost } from '@/lib/db';
 import { useGuestToken } from '@/lib/hooks';
-import { getSampleWallPosts } from '@/lib/sampleData';
 import { Button } from '@/components/GatherButton';
 import { Plus, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,18 +9,15 @@ import confetti from 'canvas-confetti';
 import { Avatar } from '@/components/Avatar';
 
 const GIF_OPTIONS = [
-  "https://media.giphy.com/media/l0amJzVHIAfl7jMDos/giphy.gif",
-  "https://media.giphy.com/media/TdfyKrN7hXjpW/giphy.gif",
-  "https://media.giphy.com/media/3o7abldj0b3rxrZUxW/giphy.gif",
-  "https://media.giphy.com/media/l41Yh18f5TmadWDPi/giphy.gif",
-  "https://media.giphy.com/media/artj9zpVs60k8/giphy.gif",
-  "https://media.giphy.com/media/blSTtZbddai8D2qhah/giphy.gif",
-  "https://media.giphy.com/media/11sBLVxNs7v6WA/giphy.gif",
-  "https://media.giphy.com/media/xT5LMHxhOfscxPfIfm/giphy.gif",
-  "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
-  "https://media.giphy.com/media/IwAZ6dvvvaTtdI8rIn/giphy.gif",
-  "https://media.giphy.com/media/me0z5b1L6QoB8l5U5N/giphy.gif",
-  "https://media.giphy.com/media/Ge86XF8AVY1KE/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDZjcXRhNnJ2a2VnbHR3bXlqOHJnMnhtZGF0NWd3dWNnZjg1eiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l0amJzVHIAfl7jMDos/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2RhdjRqN3R1ZnV4dTd4cjB1bnl0OGx5b3JhcmhpYzAyZTRqZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaGh2dXd6cGZ0MnRsNm5xNGlhNzVhdnNnNWp5cHJ4d3dvdHJ5cyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/26FxsYeQvGcaMPlqU/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2dvemZ3ZGlnaGxqcjF5MjFyYXN1c2hxM2FrbHdkZnBjcGF2OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l41Yh18f5TmadWDPi/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHRjcWN5Y3FkMWh5cXB0dGN0NXdnbXU2NHN2eGFhbHN1MnZxcSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/blSTtZbddai8D2qhah/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbG1yNXJxYWc2NWRmNnQ5ZWRjN29ldWF5cjRmaTZ1NnVlNm5yNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xT5LMHxhOfscxPfIfm/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzFkMnI3OWl4OTN2dHp1MGdoeXFmMGFxbnF0dnczZ3RnczBkbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/IwAZ6dvvvaTtdI8rIn/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcXF5NWZhMHR4NTVqeTZnOHpqZjJzNXE0M2l5MHYzOHJjcm5oeSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Ge86XF8AVY1KE/giphy.gif",
+  "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnRqOXRjOXJkejR0Y2ZxeTdqM2FlbjRoeGdhbXBhcjRtcmJvMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KD8Ldwzx90X9fSPXV3/giphy.gif",
 ];
 
 export function Wall() {
@@ -58,7 +54,7 @@ export function Wall() {
 
   const loadPosts = () => {
     if (!eventId) return;
-    db.getWallPosts(eventId).then(data => { setPosts(data.length > 0 ? data : getSampleWallPosts(eventId)); setLoading(false); });
+    db.getWallPosts(eventId).then(data => { setPosts(data); setLoading(false); });
   };
 
   const handleSubmit = async () => {
@@ -75,7 +71,7 @@ export function Wall() {
   if (loading) return <div className="p-8 text-center text-stone-400">Loading the hype...</div>;
 
   return (
-    <div className="pb-24 pt-6 px-4 min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 animate-gradient-xy text-white overflow-hidden fixed inset-0 z-0 overflow-y-auto">
+    <div className="pb-24 pt-6 px-4 min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 text-white overflow-hidden fixed inset-0 z-0 overflow-y-auto">
       <header className="flex justify-between items-center mb-6 max-w-md mx-auto relative z-10">
         <div><h1 className="text-3xl font-bold text-white">Hype Wall</h1><p className="text-white/60 font-medium">Leave a mark on the room</p></div>
         <Button size="sm" onClick={() => setShowCompose(true)} className="rounded-full w-10 h-10 p-0 flex items-center justify-center shadow-lg shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 text-white border-none">
@@ -84,7 +80,7 @@ export function Wall() {
       </header>
       <div className="max-w-md mx-auto space-y-8">
         {posts.length === 0 ? (
-          <div className="text-center py-12 text-stone-400"><MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-20" /><p>No hype yet. Be the first!</p></div>
+          <div className="text-center py-12 text-white/40"><MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-20" /><p>No hype yet. Be the first!</p></div>
         ) : posts.map((post, idx) => (
           <motion.div key={post.id} initial={{ opacity: 0, y: 20, rotate: 0 }} animate={{ opacity: 1, y: 0, rotate: idx % 2 === 0 ? 2 : -2 }} transition={{ delay: idx * 0.05 }} className="bg-white p-4 rounded-3xl shadow-sm hover:shadow-md transition-all mb-6 border border-stone-100" style={{ transformOrigin: 'top center' }}>
             <div className="flex items-center gap-3 mb-3">
@@ -101,14 +97,16 @@ export function Wall() {
         {showWelcome && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowWelcome(false)} />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-md rounded-3xl shadow-2xl z-10 overflow-hidden relative">
-              <div className="p-8 text-center space-y-6">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><span className="text-4xl">🎉</span></div>
-                <div><h2 className="text-3xl font-black text-[#1D1D1F] mb-2">You're In!</h2><p className="text-stone-500 font-medium">Welcome to the party. Here's what you can do now:</p></div>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white w-full max-w-md rounded-3xl shadow-2xl z-10 overflow-visible relative">
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-20">
+                <span className="text-8xl">🎉</span>
+              </div>
+              <div className="p-8 pt-14 text-center space-y-6">
+                <div><h2 className="text-3xl font-black text-[#1D1D1F] mb-2">{me?.name || 'You'}, Welcome to the Community!</h2><p className="text-stone-500 font-medium">Here's what you can do now:</p></div>
                 <div className="space-y-3">
-                  <button onClick={() => navigate(`/e/${eventId}/matches`)} className="w-full p-4 bg-stone-50 hover:bg-stone-100 rounded-2xl flex items-center gap-4 transition-colors group text-left">
+                  <button onClick={() => navigate(`/e/${eventId}/common-interests`)} className="w-full p-4 bg-stone-50 hover:bg-stone-100 rounded-2xl flex items-center gap-4 transition-colors group text-left">
                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">✨</div>
-                    <div><h3 className="font-bold text-[#1D1D1F]">Reveal My Matches</h3><p className="text-xs text-stone-500 font-medium">See who you vibe with</p></div>
+                    <div><h3 className="font-bold text-[#1D1D1F]">See people with common interests</h3><p className="text-xs text-stone-500 font-medium">Find your vibe tribe</p></div>
                   </button>
                   <button onClick={() => navigate(`/e/${eventId}/people`)} className="w-full p-4 bg-stone-50 hover:bg-stone-100 rounded-2xl flex items-center gap-4 transition-colors group text-left">
                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">👥</div>

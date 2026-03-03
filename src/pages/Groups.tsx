@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, Guest } from '@/lib/db';
-import { getSampleGuests } from '@/lib/sampleData';
 import { INTERESTS_STRUCTURE } from '@/lib/constants';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const CATEGORY_CONFIG: Record<string, { title: string; icon: string; gradient: string }> = {
@@ -29,7 +28,7 @@ export function Groups() {
 
   useEffect(() => {
     if (!eventId) return;
-    db.getGuests(eventId).then(data => { setGuests(data.length > 0 ? data : getSampleGuests(eventId)); setLoading(false); });
+    db.getGuests(eventId).then(data => { setGuests(data); setLoading(false); });
   }, [eventId]);
 
   const getGroupMembers = (category: string) => {
@@ -54,25 +53,32 @@ export function Groups() {
           <input type="text" placeholder="Search people..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-stone-200" />
         </div>
       </div>
-      <div className="grid gap-4">
-        {filteredGroups.map((group, index) => (
-          <motion.button key={group.category} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-            onClick={() => navigate(`/e/${eventId}/groups/${encodeURIComponent(group.category)}`)}
-            className={`w-full bg-gradient-to-br ${group.config.gradient} p-6 rounded-3xl shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden`}>
-            <div className="flex justify-between items-start mb-4">
-              <div className="text-6xl drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">{group.config.icon}</div>
-              <div className="bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-stone-700 shadow-sm">{group.totalCount} people</div>
-            </div>
-            <h3 className="text-xl font-black text-[#1D1D1F] mb-2 tracking-tight">{group.config.title}</h3>
-            <div className="flex flex-wrap gap-1">
-              {group.members.slice(0, 3).map(member => (<span key={member.id} className="text-xs text-stone-600 font-semibold bg-white/40 px-2 py-1 rounded-lg">{member.name.split(' ')[0]}</span>))}
-              {group.members.length > 3 && <span className="text-xs text-stone-500 font-semibold bg-white/40 px-2 py-1 rounded-lg">+ {group.members.length - 3} more</span>}
-            </div>
-            <ChevronRight className="absolute right-4 bottom-6 w-6 h-6 text-stone-400/50 group-hover:text-stone-600 transition-colors" />
-          </motion.button>
-        ))}
-        {filteredGroups.length === 0 && <div className="text-center py-12 text-stone-400"><p>No groups found matching your search.</p></div>}
-      </div>
+      {filteredGroups.length === 0 && guests.length === 0 ? (
+        <div className="text-center py-12 text-stone-400">
+          <Users className="w-12 h-12 mx-auto mb-2 opacity-20" />
+          <p>No groups yet. People need to join first!</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filteredGroups.map((group, index) => (
+            <motion.button key={group.category} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+              onClick={() => navigate(`/e/${eventId}/groups/${encodeURIComponent(group.category)}`)}
+              className={`w-full bg-gradient-to-br ${group.config.gradient} p-6 rounded-3xl shadow-sm hover:shadow-md transition-all text-left group relative overflow-hidden`}>
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-6xl drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">{group.config.icon}</div>
+                <div className="bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-stone-700 shadow-sm">{group.totalCount} people</div>
+              </div>
+              <h3 className="text-xl font-black text-[#1D1D1F] mb-2 tracking-tight">{group.config.title}</h3>
+              <div className="flex flex-wrap gap-1">
+                {group.members.slice(0, 3).map(member => (<span key={member.id} className="text-xs text-stone-600 font-semibold bg-white/40 px-2 py-1 rounded-lg">{member.name.split(' ')[0]}</span>))}
+                {group.members.length > 3 && <span className="text-xs text-stone-500 font-semibold bg-white/40 px-2 py-1 rounded-lg">+ {group.members.length - 3} more</span>}
+              </div>
+              <ChevronRight className="absolute right-4 bottom-6 w-6 h-6 text-stone-400/50 group-hover:text-stone-600 transition-colors" />
+            </motion.button>
+          ))}
+          {filteredGroups.length === 0 && <div className="text-center py-12 text-stone-400"><p>No groups found matching your search.</p></div>}
+        </div>
+      )}
     </div>
   );
 }

@@ -63,25 +63,14 @@ export const INTERESTS = Object.values(INTERESTS_STRUCTURE).flat();
 export const QUESTIONS = [
   {
     id: "hashem_connection",
-    text: "Since we all somehow ended up in my orbit 😄 — what's your 'Hashem connection'?",
+    text: "Where do we know each other from?",
     choices: [
       "Friend from way back",
-      "Work / startup world",
-      "Family / family friend",
+      "School Days",
+      "Sahel Summers",
+      "Sokhna Vibes",
       "Met recently",
-      "First time meeting you tonight (brave 😅)"
-    ]
-  },
-  {
-    id: "talk_trigger",
-    text: "Pick a topic you'd LOVE someone to pull you into tonight.",
-    choices: [
-      "A life decision I'm thinking about",
-      "A project I'm building",
-      "A book / show that changed me",
-      "Money / career move",
-      "Faith / meaning / habits",
-      "Fun chaos / funny stories"
+      "First time meeting"
     ]
   }
 ];
