@@ -71,7 +71,7 @@ export function Wall() {
   if (loading) return <div className="p-8 text-center text-stone-400">Loading the hype...</div>;
 
   return (
-    <div className="pb-24 pt-6 px-4 min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 text-white overflow-hidden fixed inset-0 z-0 overflow-y-auto">
+    <div className="pb-24 pt-6 min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 text-white -m-4 p-4">
       <header className="flex justify-between items-center mb-6 max-w-md mx-auto relative z-10">
         <div><h1 className="text-3xl font-bold text-white">Hype Wall</h1><p className="text-white/60 font-medium">Leave a mark on the room</p></div>
         <Button size="sm" onClick={() => setShowCompose(true)} className="rounded-full w-10 h-10 p-0 flex items-center justify-center shadow-lg shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 text-white border-none">
