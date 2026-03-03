@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, Guest } from '@/lib/db';
 import { useGuestToken } from '@/lib/hooks';
 import { Button } from '@/components/GatherButton';
-import { User, Camera, Trash2, AlertTriangle, Check, X } from 'lucide-react';
+import { User, Camera, Trash2, AlertTriangle, Check, X, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { INTERESTS_STRUCTURE } from '@/lib/constants';
+import { toast } from 'sonner';
 
 export function Profile() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -34,7 +35,6 @@ export function Profile() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 500000) { alert("File too large."); return; }
       const reader = new FileReader();
       reader.onloadend = () => setAvatarUrl(reader.result as string);
       reader.readAsDataURL(file);
@@ -44,8 +44,12 @@ export function Profile() {
   const handleSave = async () => {
     if (!eventId || !token || !guest) return;
     setSaving(true);
-    try { await db.updateGuest(eventId, token, { name, instagram, avatar_url: avatarUrl, interests: selectedInterests }); alert('Profile updated!'); }
-    catch { alert('Failed to update profile'); }
+    try {
+      await db.updateGuest(eventId, token, { name, instagram, avatar_url: avatarUrl, interests: selectedInterests });
+      setGuest(prev => prev ? { ...prev, name, instagram, avatar_url: avatarUrl, interests: selectedInterests } : null);
+      toast.success('Profile updated!');
+    }
+    catch { toast.error('Failed to update profile'); }
     finally { setSaving(false); setIsEditingInterests(false); }
   };
 
@@ -54,7 +58,12 @@ export function Profile() {
   };
 
   if (loading) return <div className="p-8 text-center text-stone-400">Loading profile...</div>;
-  if (!guest) return <div className="p-8 text-center text-stone-400">Guest not found</div>;
+  if (!guest) return (
+    <div className="p-8 text-center space-y-4">
+      <p className="text-stone-400">You haven't joined yet.</p>
+      <Button onClick={() => navigate(`/e/${eventId}/join`)} className="bg-indigo-600 text-white">Join Now</Button>
+    </div>
+  );
 
   return (
     <div className="pb-24 px-4 pt-6 space-y-8 max-w-md mx-auto">
@@ -63,29 +72,80 @@ export function Profile() {
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-32 h-32 rounded-full bg-stone-200 border-4 border-white shadow-xl overflow-hidden group">
             {avatarUrl ? <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User className="w-12 h-12 text-stone-400" /></div>}
-            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"><Camera className="w-8 h-8 text-white" /><input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" /></div>
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+              <Camera className="w-8 h-8 text-white" />
+              <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+            </div>
           </div>
         </div>
         <div className="space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
-          <div className="space-y-2"><label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Name</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 rounded-xl bg-stone-50 border border-stone-200 focus:border-indigo-500 outline-none font-bold text-stone-800" /></div>
-          <div className="space-y-2"><label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Instagram</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">@</span><input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="username" className="w-full p-3 pl-8 rounded-xl bg-stone-50 border border-stone-200 focus:border-indigo-500 outline-none font-bold text-stone-800" /></div></div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Name</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 rounded-xl bg-stone-50 border border-stone-200 focus:border-indigo-500 outline-none font-bold text-stone-800" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Instagram</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">@</span>
+              <input type="text" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="username" className="w-full p-3 pl-8 rounded-xl bg-stone-50 border border-stone-200 focus:border-indigo-500 outline-none font-bold text-stone-800" />
+            </div>
+          </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 space-y-4">
-          <div className="flex justify-between items-center"><label className="text-xs font-bold text-stone-400 uppercase tracking-wider">My Vibes</label><button onClick={() => setIsEditingInterests(!isEditingInterests)} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">{isEditingInterests ? 'Done' : 'Edit'}</button></div>
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">My Vibes</label>
+            <button onClick={() => setIsEditingInterests(!isEditingInterests)} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">{isEditingInterests ? 'Done' : 'Edit'}</button>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {selectedInterests.map(interest => (<span key={interest} className="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-bold border border-indigo-100 flex items-center gap-1">{interest}{isEditingInterests && <button onClick={() => toggleInterest(interest)} className="hover:text-indigo-900"><X className="w-3 h-3" /></button>}</span>))}
+            {selectedInterests.map(interest => (
+              <span key={interest} className="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-bold border border-indigo-100 flex items-center gap-1">
+                {interest}
+                {isEditingInterests && <button onClick={() => toggleInterest(interest)} className="hover:text-indigo-900"><X className="w-3 h-3" /></button>}
+              </span>
+            ))}
           </div>
           {isEditingInterests && (
-            <div className="pt-4 border-t border-stone-100 space-y-4"><p className="text-sm font-medium text-stone-500">Add more vibes:</p>
+            <div className="pt-4 border-t border-stone-100 space-y-4">
+              <p className="text-sm font-medium text-stone-500">Add more vibes:</p>
               <div className="h-64 overflow-y-auto space-y-4 pr-2">
-                {Object.entries(INTERESTS_STRUCTURE).map(([category, tags]) => (<div key={category} className="space-y-2"><h4 className="text-xs font-bold text-stone-400 uppercase">{category}</h4><div className="flex flex-wrap gap-2">{tags.map(tag => (<button key={tag} onClick={() => toggleInterest(tag)} className={`px-3 py-1.5 rounded-xl text-sm font-bold border transition-all ${selectedInterests.includes(tag) ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'}`}>{tag}</button>))}</div></div>))}
+                {Object.entries(INTERESTS_STRUCTURE).map(([category, tags]) => (
+                  <div key={category} className="space-y-2">
+                    <h4 className="text-xs font-bold text-stone-400 uppercase">{category}</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map(tag => (
+                        <button key={tag} onClick={() => toggleInterest(tag)}
+                          className={`px-3 py-1.5 rounded-xl text-sm font-bold border transition-all ${selectedInterests.includes(tag) ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'}`}>
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
-        <Button onClick={handleSave} disabled={saving} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20">{saving ? 'Saving...' : 'Save Changes'}</Button>
-        <div className="pt-8 border-t border-stone-200 text-center"><button onClick={() => setShowDeleteModal(true)} className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4" />Delete Account</button></div>
+        <Button onClick={handleSave} disabled={saving} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20">
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+
+        {/* Promo Section */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 space-y-4 text-center">
+          <h3 className="text-lg font-black text-stone-800">Want a Social App for Your Gathering?</h3>
+          <p className="text-sm text-stone-500 font-medium">Create your own social experience for your next event, iftar, or community gathering.</p>
+          <a href="https://bub.ai" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl hover:bg-indigo-500 transition-colors">
+            Learn More <ExternalLink className="w-4 h-4" />
+          </a>
+          <p className="text-xs text-stone-400 font-medium">Created by Mo Fattah, CEO of Bub AI</p>
+        </div>
+
+        <div className="pt-4 border-t border-stone-200 text-center">
+          <button onClick={() => setShowDeleteModal(true)} className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">
+            <Trash2 className="w-4 h-4" />Delete Account
+          </button>
+        </div>
       </div>
+
       <AnimatePresence>
         {showDeleteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

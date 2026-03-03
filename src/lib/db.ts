@@ -114,24 +114,6 @@ export const db = {
   async getGuests(eventId: string): Promise<Guest[]> {
     await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
     const guests = getMockData<Guest>('mock_guests');
-    if (guests.length === 0 && eventId === 'demo') {
-      const fakeGuests: Guest[] = [
-        {
-          id: '1', event_id: 'demo', guest_token: 'fake1', name: 'Ali', energy_level: 'Social butterfly',
-          goals: ['Make new friends', 'Explore ideas'], interests: ['AI/ML', 'Startups', 'Foodie'], answers: {}, created_at: new Date().toISOString()
-        },
-        {
-          id: '2', event_id: 'demo', guest_token: 'fake2', name: 'Sara', energy_level: 'Balanced',
-          goals: ['Find collaborators', 'Just vibe'], interests: ['Painting', 'Solo travel', 'Fiction'], answers: {}, created_at: new Date().toISOString()
-        },
-        {
-          id: '3', event_id: 'demo', guest_token: 'fake3', name: 'Omar', energy_level: 'Chill',
-          goals: ['Meet mentors'], interests: ['Finance', 'Spiritual growth'], answers: {}, created_at: new Date().toISOString()
-        }
-      ];
-      setMockData('mock_guests', fakeGuests);
-      return fakeGuests;
-    }
     return guests.filter(g => g.event_id === eventId);
   },
 

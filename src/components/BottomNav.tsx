@@ -6,7 +6,6 @@ export function BottomNav() {
   const { eventId } = useParams();
   
   const navItems = [
-    { to: `/e/${eventId}/matches`, emoji: '✨', label: 'Matches' },
     { to: `/e/${eventId}/people`, emoji: '👥', label: 'People' },
     { to: `/e/${eventId}/groups`, emoji: '💬', label: 'Groups' },
     { to: `/e/${eventId}/wall`, emoji: '📣', label: 'Wall' },

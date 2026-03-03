@@ -6,9 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Landing } from "./pages/Landing";
 import { Onboarding } from "./pages/Onboarding";
-import { Matches } from "./pages/Matches";
 import { MiniGames } from "./pages/MiniGames";
 import { People } from "./pages/People";
+import { CommonInterests } from "./pages/CommonInterests";
 import { Bingo } from "./pages/Bingo";
 import { Groups } from "./pages/Groups";
 import { GroupDetail } from "./pages/GroupDetail";
@@ -30,9 +30,9 @@ const App = () => (
             <Route path="/" element={<Navigate to="/e/demo" replace />} />
             <Route path="/e/:eventId" element={<Landing />} />
             <Route path="/e/:eventId/join" element={<Onboarding />} />
-            <Route path="/e/:eventId/matches" element={<Matches />} />
-            <Route path="/e/:eventId/games" element={<MiniGames />} />
             <Route path="/e/:eventId/people" element={<People />} />
+            <Route path="/e/:eventId/common-interests" element={<CommonInterests />} />
+            <Route path="/e/:eventId/games" element={<MiniGames />} />
             <Route path="/e/:eventId/bingo" element={<Bingo />} />
             <Route path="/e/:eventId/groups" element={<Groups />} />
             <Route path="/e/:eventId/groups/:categorySlug" element={<GroupDetail />} />

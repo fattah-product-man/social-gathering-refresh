@@ -25,7 +25,6 @@ export function Onboarding() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 500000) { alert("File too large. Please choose an image under 500KB."); return; }
       const reader = new FileReader();
       reader.onloadend = () => updateData('avatar_url', reader.result as string);
       reader.readAsDataURL(file);
@@ -47,39 +46,29 @@ export function Onboarding() {
   };
 
   const Step1Name = () => (
-    <div className="space-y-8 flex-1 flex flex-col">
+    <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-3xl font-black text-white">What should people call you?</h2>
         <p className="text-slate-400 font-medium">This is how you'll appear to others.</p>
       </div>
-      <div className="flex-1 flex flex-col justify-center space-y-8">
-        <input type="text" value={formData.name} onChange={(e) => updateData('name', e.target.value)} placeholder="Your name" className="w-full text-4xl font-bold border-b-2 border-slate-700 focus:border-yellow-400 outline-none py-4 bg-transparent placeholder-slate-700 transition-colors text-center text-white" autoFocus />
-        <AnimatePresence>
-          {formData.name && formData.name.length > 2 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-slate-700 shadow-lg">
-              <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-xl shadow-inner border border-indigo-400">🌙</div>
-              <p className="text-white font-medium">Ahlannn, <span className="text-yellow-400 font-bold">{formData.name}</span> — Hashem here 😄</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <input type="text" value={formData.name} onChange={(e) => updateData('name', e.target.value)} placeholder="Your name" className="w-full text-4xl font-bold border-b-2 border-slate-700 focus:border-yellow-400 outline-none py-4 bg-transparent placeholder-slate-700 transition-colors text-center text-white" autoFocus />
       <Button size="lg" className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-4 rounded-xl border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all" onClick={handleNext} disabled={!formData.name?.trim()}>CONTINUE</Button>
     </div>
   );
 
   const Step2Avatar = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h2 className="text-2xl font-black text-white">Add a profile picture</h2>
       <p className="text-slate-400">Optional, but helps people find you.</p>
-      <div className="flex flex-col items-center gap-8 py-8">
-        <div className="relative w-40 h-40 rounded-full bg-slate-800 border-4 border-slate-700 overflow-hidden flex items-center justify-center shadow-2xl">
-          {formData.avatar_url ? <img src={formData.avatar_url} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-6xl text-slate-600">📷</span>}
+      <div className="flex flex-col items-center gap-6 py-4">
+        <div className="relative w-36 h-36 rounded-full bg-slate-800 border-4 border-slate-700 overflow-hidden flex items-center justify-center shadow-2xl">
+          {formData.avatar_url ? <img src={formData.avatar_url} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-5xl text-slate-600">📷</span>}
           <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
           <div className="absolute bottom-2 right-2 bg-yellow-400 p-2 rounded-full shadow-lg pointer-events-none"><Sparkles className="w-4 h-4 text-yellow-900" /></div>
         </div>
         <Button variant="outline" className="relative bg-slate-800 border-slate-600 text-white hover:bg-slate-700">Choose Photo<input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" /></Button>
       </div>
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-4">
         <Button variant="ghost" onClick={handleBack} className="text-slate-400 hover:text-white hover:bg-slate-800">Back</Button>
         <div className="flex-1 flex gap-2">
           {!formData.avatar_url && <Button variant="ghost" onClick={handleNext} className="flex-1 text-slate-500 hover:text-slate-400 font-medium">Skip</Button>}
@@ -90,18 +79,16 @@ export function Onboarding() {
   );
 
   const Step3Instagram = () => (
-    <div className="space-y-8 flex-1 flex flex-col">
+    <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-3xl font-black text-white">What's your Instagram?</h2>
         <p className="text-slate-400 font-medium">So people can connect with you.</p>
       </div>
-      <div className="flex-1 flex flex-col justify-center space-y-8">
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-slate-500">@</span>
-          <input type="text" value={formData.instagram} onChange={(e) => updateData('instagram', e.target.value)} placeholder="username" className="w-full text-4xl font-bold border-b-2 border-slate-700 focus:border-pink-500 outline-none py-4 pl-12 bg-transparent placeholder-slate-700 transition-colors text-white" autoFocus />
-        </div>
+      <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-slate-500">@</span>
+        <input type="text" value={formData.instagram} onChange={(e) => updateData('instagram', e.target.value)} placeholder="username" className="w-full text-4xl font-bold border-b-2 border-slate-700 focus:border-pink-500 outline-none py-4 pl-12 bg-transparent placeholder-slate-700 transition-colors text-white" autoFocus />
       </div>
-      <div className="flex gap-4 pt-4">
+      <div className="flex gap-4">
         <Button variant="ghost" onClick={handleBack} className="text-slate-400 hover:text-white hover:bg-slate-800">Back</Button>
         <div className="flex-1 flex gap-2">
           {!formData.instagram && <Button variant="ghost" onClick={handleNext} className="flex-1 text-slate-500 hover:text-slate-400 font-medium">Skip</Button>}
@@ -137,7 +124,7 @@ export function Onboarding() {
 
     return (
       <div className="flex flex-col h-full -mx-4 px-4">
-        <div className="space-y-4 mb-4 bg-slate-900/0 backdrop-blur-xl sticky top-0 z-20 pb-4 pt-2 border-b border-white/10">
+        <div className="space-y-4 mb-4 backdrop-blur-xl sticky top-0 z-20 pb-4 pt-2 border-b border-white/10">
           <div className="flex justify-between items-center px-1">
             <div><h2 className="text-2xl font-black text-white">What are you into?</h2><p className="text-indigo-200 text-sm font-medium">Pick your top vibes</p></div>
             <Button size="sm" className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all" onClick={handleNext} disabled={(formData.interests?.length || 0) < 3}>Next ({totalSelected})</Button>
@@ -192,53 +179,35 @@ export function Onboarding() {
 
   const Step4Questions = () => {
     const [localAnswers, setLocalAnswers] = useState<Record<string, string>>(formData.answers || {});
-    const [customAnswer, setCustomAnswer] = useState('');
     const currentQ = QUESTIONS[0];
-    const showFollowUp = currentQ.id === 'hashem_connection' && localAnswers['hashem_connection'] === "First time meeting you tonight (brave 😅)";
 
     const handleAnswer = (answer: string) => {
       const newAnswers = { ...localAnswers, [currentQ.id]: answer };
       setLocalAnswers(newAnswers); updateData('answers', newAnswers);
     };
 
-    const handleCustomSubmit = () => {
-      const newAnswers = { ...localAnswers, ['ask_hashem']: customAnswer };
-      setLocalAnswers(newAnswers); updateData('answers', newAnswers); handleSubmit();
-    };
-
     return (
-      <div className="space-y-6 flex-1 flex flex-col">
+      <div className="space-y-6">
         <div className="flex items-center gap-3 bg-slate-800/60 backdrop-blur-sm p-3 rounded-2xl border border-slate-700 w-fit">
           <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm shadow-inner border border-indigo-400">🌙</div>
           <p className="text-white font-bold text-sm">Hashem</p>
         </div>
-        <div className="space-y-6 flex-1">
-          <motion.div key={currentQ.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <h2 className="text-2xl font-black text-white leading-tight">Where do we know each other from?</h2>
-            <div className="space-y-3">
-              {currentQ.choices?.map((choice) => (
-                <button key={choice} onClick={() => handleAnswer(choice)}
-                  className={`w-full p-4 rounded-xl text-left border-b-4 font-bold transition-all duration-200 active:scale-[0.98] active:border-b-0 active:translate-y-1 ${localAnswers[currentQ.id] === choice ? 'border-indigo-800 bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
-                  {choice}
-                </button>
-              ))}
-            </div>
-            {showFollowUp && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-4 space-y-3 border-t border-slate-800">
-                <p className="font-bold text-white">Love that. What do you want to ask me tonight?</p>
-                <textarea value={customAnswer} onChange={(e) => setCustomAnswer(e.target.value)} placeholder="Ask me anything..." maxLength={140} className="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-700 focus:border-yellow-400 outline-none min-h-[100px] text-white placeholder-slate-500" />
-                <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all" onClick={handleCustomSubmit} disabled={!customAnswer.trim()}>Finish</Button>
-              </motion.div>
-            )}
-          </motion.div>
+        <div className="space-y-6">
+          <h2 className="text-2xl font-black text-white leading-tight">Where do we know each other from?</h2>
+          <div className="space-y-3">
+            {currentQ.choices?.map((choice) => (
+              <button key={choice} onClick={() => handleAnswer(choice)}
+                className={`w-full p-4 rounded-xl text-left border-b-4 font-bold transition-all duration-200 active:scale-[0.98] active:border-b-0 active:translate-y-1 ${localAnswers[currentQ.id] === choice ? 'border-indigo-800 bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
+                {choice}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-4 pt-4 sticky bottom-0 bg-slate-900 pb-4 z-10 border-t border-slate-800 mt-auto">
+        <div className="flex gap-4 pt-4">
           <Button variant="ghost" onClick={handleBack} className="text-slate-400 hover:text-white hover:bg-slate-800">Back</Button>
-          {!showFollowUp && (
-            <Button className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-bold border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all" onClick={handleSubmit} disabled={loading || !localAnswers[currentQ.id]}>
-              {loading ? 'Saving...' : 'Finish'}
-            </Button>
-          )}
+          <Button className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-bold border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition-all" onClick={handleSubmit} disabled={loading || !localAnswers[currentQ.id]}>
+            {loading ? 'Saving...' : 'Finish'}
+          </Button>
         </div>
       </div>
     );
@@ -249,7 +218,7 @@ export function Onboarding() {
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 15 }} className="w-40 h-40 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-full flex items-center justify-center shadow-2xl shadow-indigo-500/30 border-4 border-slate-800 overflow-hidden">
         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Hashem&backgroundColor=b6e3f4" alt="Hashem" className="w-full h-full object-cover" />
       </motion.div>
-      <div className="space-y-4"><h1 className="text-4xl font-black text-white">You're in!</h1><p className="text-xl text-slate-400 font-medium max-w-xs mx-auto">Hashem and the crew are waiting for you.</p></div>
+      <div className="space-y-4"><h1 className="text-4xl font-black text-white">{formData.name}, You're in!</h1><p className="text-xl text-slate-400 font-medium max-w-xs mx-auto">Hashem and the crew are waiting for you.</p></div>
       <Button size="lg" className="w-full bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-black text-lg py-4 rounded-2xl shadow-xl shadow-yellow-500/20 border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1 transition-all" onClick={() => setStep(7)}>One last thing...</Button>
     </div>
   );
@@ -260,18 +229,15 @@ export function Onboarding() {
     const [submitting, setSubmitting] = useState(false);
 
     const GIF_LIBRARY = [
-      { url: "https://media.giphy.com/media/l0amJzVHIAfl7jMDos/giphy.gif", tags: ["excited"] },
-      { url: "https://media.giphy.com/media/Ge86XF8AVY1KE/giphy.gif", tags: ["dance"] },
-      { url: "https://media.giphy.com/media/3o6UB3VhArvomJHtdK/giphy.gif", tags: ["hungry"] },
-      { url: "https://media.giphy.com/media/KD8Ldwzx90X9fSPXV3/giphy.gif", tags: ["sleepy"] },
-      { url: "https://media.giphy.com/media/l41Yh18f5TmadWDPi/giphy.gif", tags: ["cool"] },
-      { url: "https://media.giphy.com/media/blSTtZbddai8D2qhah/giphy.gif", tags: ["yes"] },
-      { url: "https://media.giphy.com/media/xT5LMHxhOfscxPfIfm/giphy.gif", tags: ["party"] },
-      { url: "https://media.giphy.com/media/IwAZ6dvvvaTtdI8rIn/giphy.gif", tags: ["panic"] },
-      { url: "https://media.giphy.com/media/me0z5b1L6QoB8l5U5N/giphy.gif", tags: ["vibe"] },
-      { url: "https://media.giphy.com/media/26FxsYeQvGcaMPlqU/giphy.gif", tags: ["cheers"] },
-      { url: "https://media.giphy.com/media/l2JIdnF6aJcNqaeng/giphy.gif", tags: ["ramadan"] },
-      { url: "https://media.giphy.com/media/artj9zpVs60k8/giphy.gif", tags: ["confused"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDZjcXRhNnJ2a2VnbHR3bXlqOHJnMnhtZGF0NWd3dWNnZjg1eiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l0amJzVHIAfl7jMDos/giphy.gif", tags: ["excited"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2RhdjRqN3R1ZnV4dTd4cjB1bnl0OGx5b3JhcmhpYzAyZTRqZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3o7abldj0b3rxrZUxW/giphy.gif", tags: ["dance"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaGh2dXd6cGZ0MnRsNm5xNGlhNzVhdnNnNWp5cHJ4d3dvdHJ5cyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/26FxsYeQvGcaMPlqU/giphy.gif", tags: ["cheers"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbG1yNXJxYWc2NWRmNnQ5ZWRjN29ldWF5cjRmaTZ1NnVlNm5yNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xT5LMHxhOfscxPfIfm/giphy.gif", tags: ["party"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHRjcWN5Y3FkMWh5cXB0dGN0NXdnbXU2NHN2eGFhbHN1MnZxcSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/blSTtZbddai8D2qhah/giphy.gif", tags: ["yes"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2dvemZ3ZGlnaGxqcjF5MjFyYXN1c2hxM2FrbHdkZnBjcGF2OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l41Yh18f5TmadWDPi/giphy.gif", tags: ["cool"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzFkMnI3OWl4OTN2dHp1MGdoeXFmMGFxbnF0dnczZ3RnczBkbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/IwAZ6dvvvaTtdI8rIn/giphy.gif", tags: ["panic"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnRqOXRjOXJkejR0Y2ZxeTdqM2FlbjRoeGdhbXBhcjRtcmJvMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KD8Ldwzx90X9fSPXV3/giphy.gif", tags: ["sleepy"] },
+      { url: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcXF5NWZhMHR4NTVqeTZnOHpqZjJzNXE0M2l5MHYzOHJjcm5oeSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Ge86XF8AVY1KE/giphy.gif", tags: ["dance2"] },
     ];
     const QUICK_REPLIES = ["Yalla beena!", "Hungryyy", "Waiting for basboosa", "Raye2", "Let's gooo"];
 
@@ -291,7 +257,7 @@ export function Onboarding() {
         <div className="flex-1 overflow-y-auto space-y-8 pb-32 no-scrollbar">
           <div className="space-y-3">
             <label className="text-sm font-bold text-stone-500 uppercase tracking-wider">Your Message</label>
-            <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Can't wait to see everyone! 🌙" className="w-full p-4 rounded-2xl bg-white border-2 border-stone-200 focus:border-indigo-500 outline-none transition-all text-[#1D1D1F] placeholder-stone-400 font-medium text-lg shadow-sm" />
+            <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Can't wait to see everyone! 🌙" className="w-full p-4 rounded-2xl bg-white border-2 border-stone-200 focus:border-indigo-500 outline-none transition-all text-[#1D1D1F] placeholder-stone-400 font-medium text-lg shadow-sm" autoFocus />
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
               {QUICK_REPLIES.map(reply => (<button key={reply} onClick={() => setMessage(reply)} className="whitespace-nowrap px-5 py-3 rounded-full bg-white border border-stone-200 text-stone-600 text-sm font-bold hover:bg-stone-50 hover:border-stone-300 transition-colors shadow-sm">{reply}</button>))}
             </div>
@@ -323,16 +289,16 @@ export function Onboarding() {
   };
 
   return (
-    <div className={`pt-12 min-h-screen flex flex-col transition-colors duration-500 ${step === 7 ? 'bg-[#F5F5F7]' : 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 stars-bg'}`}>
+    <div className={`pt-8 min-h-screen flex flex-col transition-colors duration-500 ${step === 7 ? 'bg-gradient-to-b from-white to-purple-50' : 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900'}`}>
       {step < 6 && (
-        <div className="mb-8 px-4">
-          <div className="h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-            <motion.div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" initial={{ width: 0 }} animate={{ width: `${(step / 6) * 100}%` }} transition={{ type: "spring", stiffness: 100, damping: 20 }} />
+        <div className="mb-6 px-4">
+          <div className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+            <motion.div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${(step / 6) * 100}%` }} transition={{ type: "spring", stiffness: 100, damping: 20 }} />
           </div>
         </div>
       )}
       <AnimatePresence mode="wait">
-        <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex-1 flex flex-col px-4">
+        <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2, ease: "easeOut" }} className="flex-1 flex flex-col px-4">
           {step === 1 && <Step1Name />}
           {step === 2 && <Step2Avatar />}
           {step === 3 && <Step3Instagram />}
